@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .config import Config
-from .fetcher import Article, bersihkan
+from .fetcher import Article, bersihkan, sesi_http
 
 log = logging.getLogger(__name__)
 
@@ -56,12 +56,13 @@ def _judul_dari(anchor) -> str:
 
 def _detail(url: str, cfg: Config) -> str:
     try:
-        resp = requests.get(
-            url,
-            timeout=cfg.request_timeout,
-            headers={"User-Agent": "NewsDigestBot/1.0 (HTML article reader)"},
-        )
-        resp.raise_for_status()
+        with sesi_http() as sesi:
+            resp = sesi.get(
+                url,
+                timeout=cfg.request_timeout,
+                headers={"User-Agent": "NewsDigestBot/1.0 (HTML article reader)"},
+            )
+            resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
         meta = soup.select_one("meta[name='description']") or soup.select_one(
             "meta[property='og:description']"
@@ -81,12 +82,13 @@ def _detail(url: str, cfg: Config) -> str:
 def ambil_satu_halaman(url: str, cfg: Config) -> list[Article]:
     hasil: list[Article] = []
     try:
-        resp = requests.get(
-            url,
-            timeout=cfg.request_timeout,
-            headers={"User-Agent": "NewsDigestBot/1.0 (HTML article reader)"},
-        )
-        resp.raise_for_status()
+        with sesi_http() as sesi:
+            resp = sesi.get(
+                url,
+                timeout=cfg.request_timeout,
+                headers={"User-Agent": "NewsDigestBot/1.0 (HTML article reader)"},
+            )
+            resp.raise_for_status()
     except requests.RequestException as exc:
         log.warning("Gagal mengambil halaman %s: %s", url, exc)
         return hasil

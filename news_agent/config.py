@@ -5,6 +5,9 @@ from dataclasses import dataclass, field
 
 DEFAULT_FEEDS: tuple[str, ...] = (
     "https://radarsukabumi.com/feed/",
+    "https://mediasukabumi.id/feed/",
+    "https://sukabumisatu.com/feed/",
+    "https://sukabumihariini.id/feed/",
     "https://jabar.antaranews.com/rss/terkini.xml",
     "https://www.antaranews.com/rss/terkini.xml",
     "https://rss.tempo.co/",

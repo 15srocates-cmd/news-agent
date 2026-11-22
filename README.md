@@ -78,7 +78,7 @@ Semua lewat environment variable di `daily-news.yml` (bagian `env:`) atau file `
 
 | Variable | Default | Fungsi |
 |---|---|---|
-| `RSS_FEEDS` | Radar Sukabumi, Antara Jabar, Antara, Tempo | Daftar RSS, dipisah koma |
+| `RSS_FEEDS` | Radar Sukabumi, Media Sukabumi, SukabumiSatu, SukabumiHariIni, Antara Jabar, Antara, Tempo | Daftar RSS, dipisah koma |
 | `HTML_PAGES` | `https://www.sukabumiupdate.com/` | **Alamat website HTML biasa**, dipisah koma. Artikel di-scrape dari halaman ini |
 | `HTML_MAX_LINKS` | `12` | Maksimal artikel yang diambil per halaman HTML |
 | `WILAYAH_MODE` | `wajib` | `wajib` = harus menyebut Sukabumi/kecamatan; `kota` = lebih ketat; `opsional` = tanpa filter |
@@ -97,8 +97,8 @@ Kategori bawaan: Politik, Ekonomi, Teknologi, Olahraga, Hukum, Sosial, Kesehatan
 ## Cara kerja singkat
 
 1. Ambil semua RSS **dan halaman HTML** (`HTML_PAGES`) → buang artikel lebih tua dari 24 jam → hilangkan duplikat (URL + judul).
-2. **Filter wilayah** (`news_agent/wilayah.py`): hanya artikel yang menyebut Sukabumi atau salah satu dari 7 kecamatan Kota Sukabumi (Baros, Cibeureum, Cikole, Citamiang, Gunungpuyuh, Lembursitu, Warudoyong).
-3. Bandingkan dengan `state/seen.json` → hanya artikel baru yang diproses.
+2. **Filter wilayah** (`news_agent/wilayah.py`): hanya artikel yang menyebut Sukabumi atau salah satu dari 7 kecamatan Kota Sukabumi (Baros, Cibeureum, Cikole, Citamiang, Gunungpuyuh, Lembursitu, Warudoyong). Filter ini dilakukan **sebelum** pembatasan `MAX_ARTICLES`, supaya berita nasional tidak mendesak berita Sukabumi keluar.
+3. Bandingkan dengan `state/seen.json` → hanya artikel baru (maks. `MAX_ARTICLES`) yang diproses.
 4. Tiap artikel dikirim ke Ollama dengan prompt JSON: `kategori`, `ringkasan`, `penting` (1–10). Berita yang spesifik menyebut **Kota** Sukabumi/Pemkot/kecamatan mendapat **bonus +2** agar muncul lebih atas.
 5. Kelompokkan per kategori, urutkan berdasarkan skor penting, ambil top 3.
 6. Kirim ke Telegram dalam beberapa pesan (maks. ~3500 karakter per pesan).

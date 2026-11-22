@@ -25,11 +25,11 @@ def jalankan(cfg: Config) -> int:
     )
 
     artikel = fetcher.gabungkan(
-        [fetcher.ambil_semua(cfg), scraper.ambil_semua_halaman(cfg)],
-        cfg.max_articles,
+        [fetcher.ambil_semua(cfg), scraper.ambil_semua_halaman(cfg)]
     )
     log.info("Total artikel terambil: %d", len(artikel))
-    artikel = wilayah.saring(artikel, cfg)
+    artikel = wilayah.saring(artikel, cfg)[: cfg.max_articles]
+    log.info("Artikel relevan diproses: %d", len(artikel))
     if not artikel:
         log.info("Tidak ada artikel yang relevan dengan wilayah. Selesai.")
         return 0

@@ -12,10 +12,26 @@ from urllib.parse import urljoin
 
 import feedparser
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from .config import Config
 
 log = logging.getLogger(__name__)
+
+
+def sesi_http() -> requests.Session:
+    """Session dengan retry ringan untuk feed yang sesekali timeout."""
+    sesi = requests.Session()
+    retry = Retry(
+        total=2,
+        backoff_factor=0.5,
+        status_forcelist=(429, 500, 502, 503, 504),
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    sesi.mount("http://", adapter)
+    sesi.mount("https://", adapter)
+    return sesi
 
 _TAG = re.compile(r"<[^>]+>")
 _SPACE = re.compile(r"\s+")
@@ -71,12 +87,13 @@ def _sumber(feed_url: str, entry) -> str:
 def ambil_satu(url: str, cfg: Config) -> list[Article]:
     hasil: list[Article] = []
     try:
-        resp = requests.get(
-            url,
-            timeout=cfg.request_timeout,
-            headers={"User-Agent": "NewsDigestBot/1.0 (RSS reader)"},
-        )
-        resp.raise_for_status()
+        with sesi_http() as sesi:
+            resp = sesi.get(
+                url,
+                timeout=cfg.request_timeout,
+                headers={"User-Agent": "NewsDigestBot/1.0 (RSS reader)"},
+            )
+            resp.raise_for_status()
     except requests.RequestException as exc:
         log.warning("Gagal mengambil %s: %s", url, exc)
         return hasil
@@ -111,7 +128,7 @@ def ambil_satu(url: str, cfg: Config) -> list[Article]:
     return hasil
 
 
-def gabungkan(kumpulan: list[list[Article]], batas: int) -> list[Article]:
+def gabungkan(kumpulan: list[list[Article]], batas: int | None = None) -> list[Article]:
     """Gabungkan beberapa sumber RSS/scraper lalu hilangkan duplikat."""
     hasil: list[Article] = []
     tautan_dipakai: set[str] = set()
@@ -129,8 +146,9 @@ def gabungkan(kumpulan: list[list[Article]], batas: int) -> list[Article]:
         key=lambda a: a.published or datetime.min.replace(tzinfo=timezone.utc),
         reverse=True,
     )
-    return hasil[:batas]
+    return hasil[:batas] if batas is not None else hasil
 
 
 def ambil_semua(cfg: Config) -> list[Article]:
-    return gabungkan([ambil_satu(url, cfg) for url in cfg.feeds], cfg.max_articles)
+    # Tidak dipotong di sini: filter wilayah harus terjadi sebelum batas MAX_ARTICLES.
+    return gabungkan([ambil_satu(url, cfg) for url in cfg.feeds])

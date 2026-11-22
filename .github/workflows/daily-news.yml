@@ -16,6 +16,7 @@ concurrency:
 env:
   OLLAMA_MODEL: qwen2.5:3b-instruct
   OLLAMA_HOST: http://127.0.0.1:11434
+  RSS_FEEDS: "https://radarsukabumi.com/feed/,https://mediasukabumi.id/feed/,https://sukabumisatu.com/feed/,https://sukabumihariini.id/feed/,https://jabar.antaranews.com/rss/terkini.xml,https://www.antaranews.com/rss/terkini.xml,https://rss.tempo.co/"
   LOOKBACK_HOURS: "24"
   MAX_ARTICLES: "40"
   TOP_PER_CATEGORY: "3"
