@@ -1,0 +1,91 @@
+name: Daily Indonesian News Digest
+
+on:
+  schedule:
+    # 00:00 UTC = 07:00 WIB
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-news
+  cancel-in-progress: false
+
+env:
+  OLLAMA_MODEL: qwen2.5:3b-instruct
+  OLLAMA_HOST: http://127.0.0.1:11434
+  LOOKBACK_HOURS: "24"
+  MAX_ARTICLES: "40"
+  TOP_PER_CATEGORY: "3"
+  STATE_FILE: state/seen.json
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Siapkan folder state
+        run: mkdir -p state
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependensi
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Pulihkan state hari sebelumnya
+        uses: actions/cache/restore@v4
+        with:
+          path: state
+          key: news-state-${{ github.run_id }}
+          restore-keys: |
+            news-state-
+
+      - name: Install Ollama
+        run: curl -fsSL https://ollama.com/install.sh | sh
+
+      - name: Pulihkan cache model Ollama
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/.ollama/models
+          key: ollama-${{ env.OLLAMA_MODEL }}-v1
+
+      - name: Jalankan Ollama & unduh model bila perlu
+        run: |
+          nohup ollama serve > /tmp/ollama.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
+              echo "Ollama siap"
+              break
+            fi
+            sleep 1
+          done
+          if ! curl -fsS http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
+            cat /tmp/ollama.log
+            exit 1
+          fi
+          ollama pull "$OLLAMA_MODEL"
+          ollama list
+
+      - name: Jalankan agen berita
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python main.py
+
+      - name: Simpan state untuk besok
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: state
+          key: news-state-${{ github.run_id }}
