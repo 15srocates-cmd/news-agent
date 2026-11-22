@@ -19,7 +19,7 @@ SYSTEM_PROMPT = """Kamu adalah editor berita berbahasa Indonesia yang fokus pada
 
 Kategori yang diperbolehkan: {kategori}.
 
-Artikel sudah disaring agar relevan dengan Sukabumi. Jika menyebut Kabupaten Sukabumi dan Kota Sukabumi, bedakan keduanya dengan tepat di ringkasan.
+Artikel sudah disaring khusus untuk Kota Sukabumi. Jika masih menyebut Kabupaten Sukabumi, jelaskan dengan tepat bahwa itu wilayah berbeda dan jangan nyatakan sebagai berita Kota Sukabumi.
 
 Balas HANYA dengan objek JSON valid, tanpa penjelasan, tanpa markdown, dengan tiga kunci:
 - "kategori": salah satu dari daftar kategori di atas (persis sama ejaannya)

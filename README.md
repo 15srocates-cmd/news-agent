@@ -81,15 +81,17 @@ Semua lewat environment variable di `daily-news.yml` (bagian `env:`) atau file `
 | `RSS_FEEDS` | Radar Sukabumi, Media Sukabumi, SukabumiSatu, SukabumiHariIni, Antara Jabar, Antara, Tempo | Daftar RSS, dipisah koma |
 | `HTML_PAGES` | `https://www.sukabumiupdate.com/` | **Alamat website HTML biasa**, dipisah koma. Artikel di-scrape dari halaman ini |
 | `HTML_MAX_LINKS` | `12` | Maksimal artikel yang diambil per halaman HTML |
-| `WILAYAH_MODE` | `wajib` | `wajib` = harus menyebut Sukabumi/kecamatan; `kota` = lebih ketat; `opsional` = tanpa filter |
+| `WILAYAH_MODE` | `kota` | `kota` = **hanya Kota Sukabumi**; `wajib` = Sukabumi (kota + kabupaten); `opsional` = tanpa filter |
 | `WILAYAH_KEYWORDS` | Sukabumi + 7 kecamatan | Kata kunci untuk mode `wajib` |
 | `WILAYAH_PRIORITAS` | Kota Sukabumi, Pemkot, 7 kecamatan | Kata kunci yang menaikkan skor penting +2 |
+| `WILAYAH_KOTA` | Kota Sukabumi, Pemkot, Wali Kota, DPRD Kota, Polres Kota | Penanda kuat Kota Sukabumi. Penanda singkat ("Pemkot", "Wali Kota", dll.) baru dihitung bila artikel menyebut Sukabumi |
+| `WILAYAH_KABUPATEN` | Kabupaten Sukabumi, Pemkab, Bupati, Polres Sukabumi | Penanda Kabupaten — dibuang di mode `kota` bila tak ada penanda kota |
 | `OLLAMA_MODEL` | `qwen2.5:3b-instruct` | Model lokal yang dipakai |
 | `LOOKBACK_HOURS` | `24` | Hanya artikel dalam N jam terakhir |
 | `MAX_ARTICLES` | `40` | Maksimal artikel diproses per hari |
 | `TOP_PER_CATEGORY` | `3` | Berita teratas per kategori yang dikirim |
 | `OLLAMA_TIMEOUT` | `120` | Batas waktu per artikel (detik) |
-| `REQUEST_TIMEOUT` | `15` | Batas waktu request RSS (detik) |
+| `REQUEST_TIMEOUT` | `20` | Batas waktu request RSS (detik), sudah termasuk retry |
 | `STATE_FILE` | `state/seen.json` | File penanda artikel yang sudah dikirim |
 
 Kategori bawaan: Politik, Ekonomi, Teknologi, Olahraga, Hukum, Sosial, Kesehatan, Pendidikan, Lainnya. Bisa diubah di `news_agent/config.py` (`KATEGORI` dan `EMOJI_KATEGORI`).
@@ -97,7 +99,7 @@ Kategori bawaan: Politik, Ekonomi, Teknologi, Olahraga, Hukum, Sosial, Kesehatan
 ## Cara kerja singkat
 
 1. Ambil semua RSS **dan halaman HTML** (`HTML_PAGES`) → buang artikel lebih tua dari 24 jam → hilangkan duplikat (URL + judul).
-2. **Filter wilayah** (`news_agent/wilayah.py`): hanya artikel yang menyebut Sukabumi atau salah satu dari 7 kecamatan Kota Sukabumi (Baros, Cibeureum, Cikole, Citamiang, Gunungpuyuh, Lembursitu, Warudoyong). Filter ini dilakukan **sebelum** pembatasan `MAX_ARTICLES`, supaya berita nasional tidak mendesak berita Sukabumi keluar.
+2. **Filter wilayah** (`news_agent/wilayah.py`) dengan `WILAYAH_MODE=kota`: lolos bila menyebut penanda kuat Kota Sukabumi (Kota Sukabumi, Pemkot, Wali Kota, DPRD Kota, Polres Sukabumi Kota), **atau** salah satu dari 7 kecamatan (Baros, Cibeureum, Cikole, Citamiang, Gunungpuyuh, Lembursitu, Warudoyong) tanpa disertai penanda Kabupaten Sukabumi (Cidahu, Cikidang, Pemkab, Bupati, dll. otomatis gugur). Filter ini dilakukan **sebelum** pembatasan `MAX_ARTICLES`, supaya berita nasional tidak mendesak berita Kota Sukabumi keluar.
 3. Bandingkan dengan `state/seen.json` → hanya artikel baru (maks. `MAX_ARTICLES`) yang diproses.
 4. Tiap artikel dikirim ke Ollama dengan prompt JSON: `kategori`, `ringkasan`, `penting` (1–10). Berita yang spesifik menyebut **Kota** Sukabumi/Pemkot/kecamatan mendapat **bonus +2** agar muncul lebih atas.
 5. Kelompokkan per kategori, urutkan berdasarkan skor penting, ambil top 3.

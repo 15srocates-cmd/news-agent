@@ -18,16 +18,19 @@ env:
   OLLAMA_HOST: http://127.0.0.1:11434
   RSS_FEEDS: "https://radarsukabumi.com/feed/,https://mediasukabumi.id/feed/,https://sukabumisatu.com/feed/,https://sukabumihariini.id/feed/,https://jabar.antaranews.com/rss/terkini.xml,https://www.antaranews.com/rss/terkini.xml,https://rss.tempo.co/"
   LOOKBACK_HOURS: "24"
+  REQUEST_TIMEOUT: "20"
   MAX_ARTICLES: "40"
   TOP_PER_CATEGORY: "3"
   STATE_FILE: state/seen.json
   # Halaman HTML biasa (bukan RSS) yang di-scrape artikelnya
   HTML_PAGES: https://www.sukabumiupdate.com/
   HTML_MAX_LINKS: "12"
-  # wajib = menyebut Sukabumi/kecamatan | kota = lebih ketat | opsional = tanpa filter
-  WILAYAH_MODE: wajib
+  # kota = HANYA Kota Sukabumi | wajib = Sukabumi (kota + kabupaten) | opsional = tanpa filter
+  WILAYAH_MODE: kota
   WILAYAH_KEYWORDS: "Sukabumi,Kota Sukabumi,Pemkot Sukabumi,Wali Kota Sukabumi,DPRD Sukabumi,Polres Sukabumi,Baros,Cibeureum,Cikole,Citamiang,Gunungpuyuh,Lembursitu,Warudoyong"
   WILAYAH_PRIORITAS: "Kota Sukabumi,Pemkot Sukabumi,Wali Kota Sukabumi,DPRD Kota Sukabumi,Polres Sukabumi Kota,Baros,Cibeureum,Cikole,Citamiang,Gunungpuyuh,Lembursitu,Warudoyong"
+  WILAYAH_KOTA: "Kota Sukabumi,Sukabumi Kota,Pemkot Sukabumi,Wali Kota Sukabumi,DPRD Kota Sukabumi,Polres Sukabumi Kota,Polres Kota Sukabumi,Pemda Kota Sukabumi,Pemkot,Wali Kota,DPRD Kota,Polres Kota,Pemda Kota"
+  WILAYAH_KABUPATEN: "Kabupaten Sukabumi,Pemkab Sukabumi,Bupati Sukabumi,DPRD Kabupaten Sukabumi,Polres Sukabumi,Pemda Kabupaten Sukabumi"
 
 jobs:
   digest:

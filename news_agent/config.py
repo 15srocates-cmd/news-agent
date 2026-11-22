@@ -44,6 +44,33 @@ DEFAULT_WILAYAH_PRIORITAS: tuple[str, ...] = (
     "Warudoyong",
 )
 
+# Penanda kuat Kota Sukabumi (bukan sekadar nama kecamatan yang juga ada di Kabupaten).
+DEFAULT_WILAYAH_KOTA: tuple[str, ...] = (
+    "Kota Sukabumi",
+    "Sukabumi Kota",
+    "Pemkot Sukabumi",
+    "Wali Kota Sukabumi",
+    "DPRD Kota Sukabumi",
+    "Polres Sukabumi Kota",
+    "Polres Kota Sukabumi",
+    "Pemda Kota Sukabumi",
+    "Pemkot",
+    "Wali Kota",
+    "DPRD Kota",
+    "Polres Kota",
+    "Pemda Kota",
+)
+
+# Penanda Kabupaten Sukabumi, dipakai untuk membuang berita kabupaten di mode "kota".
+DEFAULT_WILAYAH_KABUPATEN: tuple[str, ...] = (
+    "Kabupaten Sukabumi",
+    "Pemkab Sukabumi",
+    "Bupati Sukabumi",
+    "DPRD Kabupaten Sukabumi",
+    "Polres Sukabumi",
+    "Pemda Kabupaten Sukabumi",
+)
+
 KATEGORI: tuple[str, ...] = (
     "Politik",
     "Ekonomi",
@@ -95,12 +122,18 @@ class Config:
     feeds: tuple[str, ...] = field(default_factory=_feeds_env)
     kategori: tuple[str, ...] = KATEGORI
 
-    wilayah_mode: str = field(default_factory=lambda: os.getenv("WILAYAH_MODE", "wajib").lower())
+    wilayah_mode: str = field(default_factory=lambda: os.getenv("WILAYAH_MODE", "kota").lower())
     wilayah_keywords: tuple[str, ...] = field(
         default_factory=lambda: _daftar_env("WILAYAH_KEYWORDS", DEFAULT_WILAYAH_KEYWORDS)
     )
     wilayah_prioritas: tuple[str, ...] = field(
         default_factory=lambda: _daftar_env("WILAYAH_PRIORITAS", DEFAULT_WILAYAH_PRIORITAS)
+    )
+    wilayah_kota: tuple[str, ...] = field(
+        default_factory=lambda: _daftar_env("WILAYAH_KOTA", DEFAULT_WILAYAH_KOTA)
+    )
+    wilayah_kabupaten: tuple[str, ...] = field(
+        default_factory=lambda: _daftar_env("WILAYAH_KABUPATEN", DEFAULT_WILAYAH_KABUPATEN)
     )
 
     telegram_token: str = field(default_factory=lambda: os.getenv("TELEGRAM_BOT_TOKEN", ""))
