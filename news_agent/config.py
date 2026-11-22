@@ -113,6 +113,10 @@ class Config:
     max_articles: int = field(default_factory=lambda: _int_env("MAX_ARTICLES", 40))
     top_per_category: int = field(default_factory=lambda: _int_env("TOP_PER_CATEGORY", 3))
 
+    # Halaman HTML biasa (bukan RSS) yang ingin di-scrape artikelnya.
+    html_pages: tuple[str, ...] = field(default_factory=lambda: _daftar_env("HTML_PAGES", ()))
+    html_max_links: int = field(default_factory=lambda: _int_env("HTML_MAX_LINKS", 12))
+
     request_timeout: int = field(default_factory=lambda: _int_env("REQUEST_TIMEOUT", 15))
     state_file: str = field(default_factory=lambda: os.getenv("STATE_FILE", "state/seen.json"))
 

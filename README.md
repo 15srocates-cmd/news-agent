@@ -23,6 +23,7 @@ news-agent/
 └── news_agent/
     ├── config.py                      # semua konfigurasi via environment variable
     ├── fetcher.py                     # ambil + bersihkan + dedup RSS
+    ├── scraper.py                     # ambil artikel dari halaman HTML biasa
     ├── classifier.py                  # klasifikasi via Ollama API
     ├── digest.py                      # susun pesan Telegram
     ├── wilayah.py                     # filter & prioritas Kota Sukabumi
@@ -78,6 +79,8 @@ Semua lewat environment variable di `daily-news.yml` (bagian `env:`) atau file `
 | Variable | Default | Fungsi |
 |---|---|---|
 | `RSS_FEEDS` | Radar Sukabumi, Antara Jabar, Antara, Tempo | Daftar RSS, dipisah koma |
+| `HTML_PAGES` | `https://www.sukabumiupdate.com/` | **Alamat website HTML biasa**, dipisah koma. Artikel di-scrape dari halaman ini |
+| `HTML_MAX_LINKS` | `12` | Maksimal artikel yang diambil per halaman HTML |
 | `WILAYAH_MODE` | `wajib` | `wajib` = harus menyebut Sukabumi/kecamatan; `kota` = lebih ketat; `opsional` = tanpa filter |
 | `WILAYAH_KEYWORDS` | Sukabumi + 7 kecamatan | Kata kunci untuk mode `wajib` |
 | `WILAYAH_PRIORITAS` | Kota Sukabumi, Pemkot, 7 kecamatan | Kata kunci yang menaikkan skor penting +2 |
@@ -93,7 +96,7 @@ Kategori bawaan: Politik, Ekonomi, Teknologi, Olahraga, Hukum, Sosial, Kesehatan
 
 ## Cara kerja singkat
 
-1. Ambil semua RSS → buang artikel lebih tua dari 24 jam → hilangkan duplikat (URL + judul).
+1. Ambil semua RSS **dan halaman HTML** (`HTML_PAGES`) → buang artikel lebih tua dari 24 jam → hilangkan duplikat (URL + judul).
 2. **Filter wilayah** (`news_agent/wilayah.py`): hanya artikel yang menyebut Sukabumi atau salah satu dari 7 kecamatan Kota Sukabumi (Baros, Cibeureum, Cikole, Citamiang, Gunungpuyuh, Lembursitu, Warudoyong).
 3. Bandingkan dengan `state/seen.json` → hanya artikel baru yang diproses.
 4. Tiap artikel dikirim ke Ollama dengan prompt JSON: `kategori`, `ringkasan`, `penting` (1–10). Berita yang spesifik menyebut **Kota** Sukabumi/Pemkot/kecamatan mendapat **bonus +2** agar muncul lebih atas.

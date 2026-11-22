@@ -111,22 +111,26 @@ def ambil_satu(url: str, cfg: Config) -> list[Article]:
     return hasil
 
 
-def ambil_semua(cfg: Config) -> list[Article]:
-    semua: list[Article] = []
+def gabungkan(kumpulan: list[list[Article]], batas: int) -> list[Article]:
+    """Gabungkan beberapa sumber RSS/scraper lalu hilangkan duplikat."""
+    hasil: list[Article] = []
     tautan_dipakai: set[str] = set()
     judul_dipakai: set[str] = set()
 
-    for url in cfg.feeds:
-        for artikel in ambil_satu(url, cfg):
-            kunci = normalisasi(artikel.title)
-            if artikel.link in tautan_dipakai or (kunci and kunci in judul_dipakai):
-                continue
-            tautan_dipakai.add(artikel.link)
-            judul_dipakai.add(kunci)
-            semua.append(artikel)
+    for artikel in (item for grup in kumpulan for item in grup):
+        kunci = normalisasi(artikel.title)
+        if artikel.link in tautan_dipakai or (kunci and kunci in judul_dipakai):
+            continue
+        tautan_dipakai.add(artikel.link)
+        judul_dipakai.add(kunci)
+        hasil.append(artikel)
 
-    semua.sort(
+    hasil.sort(
         key=lambda a: a.published or datetime.min.replace(tzinfo=timezone.utc),
         reverse=True,
     )
-    return semua[: cfg.max_articles]
+    return hasil[:batas]
+
+
+def ambil_semua(cfg: Config) -> list[Article]:
+    return gabungkan([ambil_satu(url, cfg) for url in cfg.feeds], cfg.max_articles)

@@ -4,7 +4,7 @@ import logging
 import sys
 from dataclasses import replace
 
-from news_agent import classifier, digest, fetcher, store, wilayah
+from news_agent import classifier, digest, fetcher, scraper, store, wilayah
 from news_agent.config import Config
 from news_agent.telegram import Telegram
 
@@ -24,7 +24,10 @@ def jalankan(cfg: Config) -> int:
         cfg.lookback_hours,
     )
 
-    artikel = fetcher.ambil_semua(cfg)
+    artikel = fetcher.gabungkan(
+        [fetcher.ambil_semua(cfg), scraper.ambil_semua_halaman(cfg)],
+        cfg.max_articles,
+    )
     log.info("Total artikel terambil: %d", len(artikel))
     artikel = wilayah.saring(artikel, cfg)
     if not artikel:

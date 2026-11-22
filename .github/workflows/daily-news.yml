@@ -20,6 +20,9 @@ env:
   MAX_ARTICLES: "40"
   TOP_PER_CATEGORY: "3"
   STATE_FILE: state/seen.json
+  # Halaman HTML biasa (bukan RSS) yang di-scrape artikelnya
+  HTML_PAGES: https://www.sukabumiupdate.com/
+  HTML_MAX_LINKS: "12"
   # wajib = menyebut Sukabumi/kecamatan | kota = lebih ketat | opsional = tanpa filter
   WILAYAH_MODE: wajib
   WILAYAH_KEYWORDS: "Sukabumi,Kota Sukabumi,Pemkot Sukabumi,Wali Kota Sukabumi,DPRD Sukabumi,Polres Sukabumi,Baros,Cibeureum,Cikole,Citamiang,Gunungpuyuh,Lembursitu,Warudoyong"
