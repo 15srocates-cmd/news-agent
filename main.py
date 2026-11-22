@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import logging
 import sys
+from dataclasses import replace
 
-from news_agent import classifier, digest, fetcher, store
+from news_agent import classifier, digest, fetcher, store, wilayah
 from news_agent.config import Config
 from news_agent.telegram import Telegram
 
@@ -25,8 +26,9 @@ def jalankan(cfg: Config) -> int:
 
     artikel = fetcher.ambil_semua(cfg)
     log.info("Total artikel terambil: %d", len(artikel))
+    artikel = wilayah.saring(artikel, cfg)
     if not artikel:
-        log.info("Tidak ada artikel. Selesai.")
+        log.info("Tidak ada artikel yang relevan dengan wilayah. Selesai.")
         return 0
 
     seen = store.muat(cfg.state_file)
@@ -43,7 +45,11 @@ def jalankan(cfg: Config) -> int:
     label = []
     for i, a in enumerate(baru, 1):
         log.info("[%d/%d] %s", i, len(baru), a.title[:70])
-        label.append(klasi.klasifikasikan(a))
+        hasil = klasi.klasifikasikan(a)
+        tambahan = wilayah.bonus(a, cfg)
+        if tambahan:
+            hasil = replace(hasil, penting=min(10, hasil.penting + tambahan))
+        label.append(hasil)
 
     pesan = digest.susun(baru, label, cfg)
     log.info("Pesan Telegram: %d bagian", len(pesan))

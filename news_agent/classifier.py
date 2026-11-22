@@ -15,9 +15,11 @@ log = logging.getLogger(__name__)
 
 _FENCE = re.compile(r"^```(?:json)?\s*|\s*```$", re.IGNORECASE)
 
-SYSTEM_PROMPT = """Kamu adalah editor berita berbahasa Indonesia. Tugasmu hanya mengklasifikasikan satu artikel.
+SYSTEM_PROMPT = """Kamu adalah editor berita berbahasa Indonesia yang fokus pada Kota Sukabumi, Jawa Barat. Tugasmu hanya mengklasifikasikan satu artikel.
 
 Kategori yang diperbolehkan: {kategori}.
+
+Artikel sudah disaring agar relevan dengan Sukabumi. Jika menyebut Kabupaten Sukabumi dan Kota Sukabumi, bedakan keduanya dengan tepat di ringkasan.
 
 Balas HANYA dengan objek JSON valid, tanpa penjelasan, tanpa markdown, dengan tiga kunci:
 - "kategori": salah satu dari daftar kategori di atas (persis sama ejaannya)

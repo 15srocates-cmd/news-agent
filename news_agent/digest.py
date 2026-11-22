@@ -44,9 +44,9 @@ def susun(artikel: list[Article], label: list[Label], cfg: Config) -> list[str]:
     tanggal = datetime.now(WIB).strftime("%d %b %Y")
     total = sum(len(items) for items in grup.values())
     bagian: list[str] = [
-        "📰 <b>Ringkasan Berita Indonesia</b>\n"
-        f"🗓️ {tanggal} · ⏱️ 07.00 WIB\n"
-        f"📥 {total} artikel baru dari {len(cfg.feeds)} sumber"
+        "📰 <b>Ringkasan Berita Kota Sukabumi</b>\n"
+        f"🗓️ {tanggal} · ⏱️ 07.00 WIB · 📍 fokus Kota Sukabumi\n"
+        f"📥 {total} artikel relevan dari {len(cfg.feeds)} sumber"
     ]
 
     for kategori in cfg.kategori:

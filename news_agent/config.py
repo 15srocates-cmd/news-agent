@@ -4,10 +4,41 @@ import os
 from dataclasses import dataclass, field
 
 DEFAULT_FEEDS: tuple[str, ...] = (
+    "https://radarsukabumi.com/feed/",
+    "https://jabar.antaranews.com/rss/terkini.xml",
     "https://www.antaranews.com/rss/terkini.xml",
     "https://rss.tempo.co/",
-    "https://www.sindonews.com/feed",
-    "https://feeds.bbci.co.uk/indonesia/news/rss.xml",
+)
+
+DEFAULT_WILAYAH_KEYWORDS: tuple[str, ...] = (
+    "Sukabumi",
+    "Kota Sukabumi",
+    "Pemkot Sukabumi",
+    "Wali Kota Sukabumi",
+    "DPRD Sukabumi",
+    "Polres Sukabumi",
+    "Baros",
+    "Cibeureum",
+    "Cikole",
+    "Citamiang",
+    "Gunungpuyuh",
+    "Lembursitu",
+    "Warudoyong",
+)
+
+DEFAULT_WILAYAH_PRIORITAS: tuple[str, ...] = (
+    "Kota Sukabumi",
+    "Pemkot Sukabumi",
+    "Wali Kota Sukabumi",
+    "DPRD Kota Sukabumi",
+    "Polres Sukabumi Kota",
+    "Baros",
+    "Cibeureum",
+    "Cikole",
+    "Citamiang",
+    "Gunungpuyuh",
+    "Lembursitu",
+    "Warudoyong",
 )
 
 KATEGORI: tuple[str, ...] = (
@@ -49,10 +80,25 @@ def _feeds_env() -> tuple[str, ...]:
     return tuple(url.strip() for url in raw.split(",") if url.strip())
 
 
+def _daftar_env(nama: str, bawaan: tuple[str, ...]) -> tuple[str, ...]:
+    raw = os.getenv(nama, "").strip()
+    if not raw:
+        return bawaan
+    return tuple(item.strip() for item in raw.split(",") if item.strip())
+
+
 @dataclass(frozen=True)
 class Config:
     feeds: tuple[str, ...] = field(default_factory=_feeds_env)
     kategori: tuple[str, ...] = KATEGORI
+
+    wilayah_mode: str = field(default_factory=lambda: os.getenv("WILAYAH_MODE", "wajib").lower())
+    wilayah_keywords: tuple[str, ...] = field(
+        default_factory=lambda: _daftar_env("WILAYAH_KEYWORDS", DEFAULT_WILAYAH_KEYWORDS)
+    )
+    wilayah_prioritas: tuple[str, ...] = field(
+        default_factory=lambda: _daftar_env("WILAYAH_PRIORITAS", DEFAULT_WILAYAH_PRIORITAS)
+    )
 
     telegram_token: str = field(default_factory=lambda: os.getenv("TELEGRAM_BOT_TOKEN", ""))
     telegram_chat_id: str = field(default_factory=lambda: os.getenv("TELEGRAM_CHAT_ID", ""))
@@ -80,3 +126,5 @@ class Config:
             kosong.append("RSS_FEEDS")
         if kosong:
             raise RuntimeError("Environment variable belum diisi: " + ", ".join(kosong))
+        if self.wilayah_mode not in {"wajib", "kota", "opsional"}:
+            raise RuntimeError("WILAYAH_MODE harus salah satu dari: wajib, kota, opsional")

@@ -19,6 +19,8 @@ log = logging.getLogger(__name__)
 
 _TAG = re.compile(r"<[^>]+>")
 _SPACE = re.compile(r"\s+")
+_SUMBER = re.compile(r"^\s*Sumber\s*:\s*[^—–|]{0,100}", re.IGNORECASE)
+_POST = re.compile(r"\s*The post\b.*?appeared first on\b.*$", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -37,6 +39,9 @@ class Article:
 
 def bersihkan(teks: str, batas: int = 400) -> str:
     teks = html.unescape(_TAG.sub(" ", teks or ""))
+    teks = _SPACE.sub(" ", teks).strip()
+    teks = _SUMBER.sub("", teks)
+    teks = _POST.sub("", teks)
     return _SPACE.sub(" ", teks).strip()[:batas]
 
 

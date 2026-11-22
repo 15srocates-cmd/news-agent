@@ -1,6 +1,6 @@
 # Agen Berita Harian (RSS → Ollama → Telegram)
 
-Agen otomatis yang tiap hari mengambil berita RSS berbahasa Indonesia, mengkategorikannya dengan **model lokal gratis** (Ollama), lalu mengirim ringkasan ke Telegram. Dijalankan gratis lewat **GitHub Actions**.
+Agen otomatis yang tiap hari mengambil berita RSS berbahasa Indonesia, **memfilternya agar fokus di Kota Sukabumi**, mengkategorikannya dengan **model lokal gratis** (Ollama), lalu mengirim ringkasan ke Telegram. Dijalankan gratis lewat **GitHub Actions**.
 
 ## Catatan penting: Ollama vs GitHub Actions
 
@@ -25,6 +25,7 @@ news-agent/
     ├── fetcher.py                     # ambil + bersihkan + dedup RSS
     ├── classifier.py                  # klasifikasi via Ollama API
     ├── digest.py                      # susun pesan Telegram
+    ├── wilayah.py                     # filter & prioritas Kota Sukabumi
     ├── store.py                       # simpan daftar artikel yang sudah dikirim
     └── telegram.py                    # kirim pesan (dengan retry)
 ```
@@ -76,7 +77,10 @@ Semua lewat environment variable di `daily-news.yml` (bagian `env:`) atau file `
 
 | Variable | Default | Fungsi |
 |---|---|---|
-| `RSS_FEEDS` | 4 feed (Antara, Tempo, SINDOnews, BBC Indonesia) | Daftar RSS, dipisah koma |
+| `RSS_FEEDS` | Radar Sukabumi, Antara Jabar, Antara, Tempo | Daftar RSS, dipisah koma |
+| `WILAYAH_MODE` | `wajib` | `wajib` = harus menyebut Sukabumi/kecamatan; `kota` = lebih ketat; `opsional` = tanpa filter |
+| `WILAYAH_KEYWORDS` | Sukabumi + 7 kecamatan | Kata kunci untuk mode `wajib` |
+| `WILAYAH_PRIORITAS` | Kota Sukabumi, Pemkot, 7 kecamatan | Kata kunci yang menaikkan skor penting +2 |
 | `OLLAMA_MODEL` | `qwen2.5:3b-instruct` | Model lokal yang dipakai |
 | `LOOKBACK_HOURS` | `24` | Hanya artikel dalam N jam terakhir |
 | `MAX_ARTICLES` | `40` | Maksimal artikel diproses per hari |
@@ -90,11 +94,12 @@ Kategori bawaan: Politik, Ekonomi, Teknologi, Olahraga, Hukum, Sosial, Kesehatan
 ## Cara kerja singkat
 
 1. Ambil semua RSS → buang artikel lebih tua dari 24 jam → hilangkan duplikat (URL + judul).
-2. Bandingkan dengan `state/seen.json` → hanya artikel baru yang diproses.
-3. Tiap artikel dikirim ke Ollama dengan prompt JSON: `kategori`, `ringkasan`, `penting` (1–10).
-4. Kelompokkan per kategori, urutkan berdasarkan skor penting, ambil top 3.
-5. Kirim ke Telegram dalam beberapa pesan (maks. ~3500 karakter per pesan).
-6. Simpan daftar artikel ke state **hanya setelah pengiriman berhasil** — jadi kalau Telegram gagal, besoknya dicoba lagi tanpa duplikat.
+2. **Filter wilayah** (`news_agent/wilayah.py`): hanya artikel yang menyebut Sukabumi atau salah satu dari 7 kecamatan Kota Sukabumi (Baros, Cibeureum, Cikole, Citamiang, Gunungpuyuh, Lembursitu, Warudoyong).
+3. Bandingkan dengan `state/seen.json` → hanya artikel baru yang diproses.
+4. Tiap artikel dikirim ke Ollama dengan prompt JSON: `kategori`, `ringkasan`, `penting` (1–10). Berita yang spesifik menyebut **Kota** Sukabumi/Pemkot/kecamatan mendapat **bonus +2** agar muncul lebih atas.
+5. Kelompokkan per kategori, urutkan berdasarkan skor penting, ambil top 3.
+6. Kirim ke Telegram dalam beberapa pesan (maks. ~3500 karakter per pesan).
+7. Simpan daftar artikel ke state **hanya setelah pengiriman berhasil** — jadi kalau Telegram gagal, besoknya dicoba lagi tanpa duplikat.
 
 ## Jalankan di lokal (opsional)
 
