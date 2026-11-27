@@ -8,9 +8,16 @@ DEFAULT_FEEDS: tuple[str, ...] = (
     "https://mediasukabumi.id/feed/",
     "https://sukabumisatu.com/feed/",
     "https://sukabumihariini.id/feed/",
+    "https://sukabumiku.id/feed/",
     "https://jabar.antaranews.com/rss/terkini.xml",
     "https://www.antaranews.com/rss/terkini.xml",
     "https://rss.tempo.co/",
+)
+
+DEFAULT_HTML_PAGES: tuple[str, ...] = (
+    "https://www.sukabumiupdate.com/",
+    "https://kabarindah.com/",
+    "https://sukabumikini.com/",
 )
 
 DEFAULT_WILAYAH_KEYWORDS: tuple[str, ...] = (
@@ -150,7 +157,9 @@ class Config:
     top_per_category: int = field(default_factory=lambda: _int_env("TOP_PER_CATEGORY", 3))
 
     # Halaman HTML biasa (bukan RSS) yang ingin di-scrape artikelnya.
-    html_pages: tuple[str, ...] = field(default_factory=lambda: _daftar_env("HTML_PAGES", ()))
+    html_pages: tuple[str, ...] = field(
+        default_factory=lambda: _daftar_env("HTML_PAGES", DEFAULT_HTML_PAGES)
+    )
     html_max_links: int = field(default_factory=lambda: _int_env("HTML_MAX_LINKS", 12))
 
     request_timeout: int = field(default_factory=lambda: _int_env("REQUEST_TIMEOUT", 15))

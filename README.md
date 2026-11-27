@@ -78,8 +78,8 @@ Semua lewat environment variable di `daily-news.yml` (bagian `env:`) atau file `
 
 | Variable | Default | Fungsi |
 |---|---|---|
-| `RSS_FEEDS` | Radar Sukabumi, Media Sukabumi, SukabumiSatu, SukabumiHariIni, Antara Jabar, Antara, Tempo | Daftar RSS, dipisah koma |
-| `HTML_PAGES` | `https://www.sukabumiupdate.com/` | **Alamat website HTML biasa**, dipisah koma. Artikel di-scrape dari halaman ini |
+| `RSS_FEEDS` | Radar Sukabumi, Media Sukabumi, SukabumiSatu, SukabumiHariIni, SukabumiKu, Antara Jabar, Antara, Tempo | Daftar RSS, dipisah koma |
+| `HTML_PAGES` | Sukabumiupdate, KabarIndah, SukabumiKini | **Alamat website HTML biasa**, dipisah koma. Artikel di-scrape dari halaman ini |
 | `HTML_MAX_LINKS` | `12` | Maksimal artikel yang diambil per halaman HTML |
 | `WILAYAH_MODE` | `kota` | `kota` = **hanya Kota Sukabumi**; `wajib` = Sukabumi (kota + kabupaten); `opsional` = tanpa filter |
 | `WILAYAH_KEYWORDS` | Sukabumi + 7 kecamatan | Kata kunci untuk mode `wajib` |

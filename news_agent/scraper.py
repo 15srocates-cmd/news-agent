@@ -23,7 +23,15 @@ _TANGGAL = re.compile(
     rf"{_HARI}\s+(\d{{1,2}})\s+([A-Za-z]{{3}})\s+(\d{{4}}),\s*(\d{{2}}):(\d{{2}})\s*WIB",
     re.IGNORECASE,
 )
+_TANGGAL_URL = re.compile(r"/(20\d{2})/(\d{1,2})/(\d{1,2})/")
 _ARTIKEL = re.compile(r"/\d+/")
+_SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+){3,}", re.IGNORECASE)
+_TIDAK_ARTIKEL = re.compile(
+    r"/(?:kategori|category|kategori-berita|tag|tags|topik|author|penulis|page|"
+    r"about|tentang|contact|kontak|arsip|archive|search|cari|feed|rss|wp-content|"
+    r"wp-admin|login|register|sitemap|privacy|terms)(?:/|$)",
+    re.IGNORECASE,
+)
 
 
 def _waktu(teks: str) -> datetime | None:
@@ -39,6 +47,37 @@ def _waktu(teks: str) -> datetime | None:
         return None
 
 
+def _waktu_url(tautan: str) -> datetime | None:
+    m = _TANGGAL_URL.search(tautan)
+    if not m:
+        return None
+    try:
+        return datetime(*(int(x) for x in m.groups()), tzinfo=WIB)
+    except ValueError:
+        return None
+
+
+def _waktu_meta(nilai: str | None) -> datetime | None:
+    if not nilai:
+        return None
+    try:
+        hasil = datetime.fromisoformat(nilai.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return hasil if hasil.tzinfo else hasil.replace(tzinfo=timezone.utc)
+
+
+def _adalah_artikel(tautan: str) -> bool:
+    if _TIDAK_ARTIKEL.search(tautan):
+        return False
+    if _ARTIKEL.search(tautan):
+        return True
+    bagian = [b for b in urlparse(tautan).path.split("/") if b]
+    if not bagian:
+        return False
+    return bool(_SLUG.fullmatch(bagian[-1]))
+
+
 def _sumber(url: str) -> str:
     return urlparse(url).netloc.replace("www.", "")
 
@@ -48,13 +87,18 @@ def _judul_dari(anchor) -> str:
         teks = bersihkan(tag.get_text(" ", strip=True), 300)
         if len(teks) >= 20:
             return teks
+    if anchor.get("title"):
+        teks = bersihkan(anchor["title"], 300)
+        if len(teks) >= 20:
+            return teks
     gambar = anchor.find("img", alt=True)
     if gambar and len(gambar["alt"]) >= 20:
         return bersihkan(gambar["alt"], 300)
     return bersihkan(anchor.get_text(" ", strip=True), 300)
 
 
-def _detail(url: str, cfg: Config) -> str:
+def _detail(url: str, cfg: Config) -> tuple[str, datetime | None]:
+    """Ambil ringkasan dan waktu terbit dari halaman artikel."""
     try:
         with sesi_http() as sesi:
             resp = sesi.get(
@@ -67,16 +111,20 @@ def _detail(url: str, cfg: Config) -> str:
         meta = soup.select_one("meta[name='description']") or soup.select_one(
             "meta[property='og:description']"
         )
+        ringkasan = ""
         if meta and meta.get("content"):
-            return bersihkan(meta["content"], 500)
-        h1 = soup.find("h1")
-        if h1:
-            paragraf = h1.find_next("p")
-            if paragraf:
-                return bersihkan(paragraf.get_text(" ", strip=True), 500)
+            ringkasan = bersihkan(meta["content"], 500)
+        if not ringkasan:
+            h1 = soup.find("h1")
+            if h1:
+                paragraf = h1.find_next("p")
+                if paragraf:
+                    ringkasan = bersihkan(paragraf.get_text(" ", strip=True), 500)
+        terbit = soup.select_one("meta[property='article:published_time']")
+        return ringkasan, _waktu_meta(terbit.get("content") if terbit else None)
     except requests.RequestException as exc:
         log.warning("Gagal mengambil detail %s: %s", url, exc)
-    return ""
+    return "", None
 
 
 def ambil_satu_halaman(url: str, cfg: Config) -> list[Article]:
@@ -98,24 +146,29 @@ def ambil_satu_halaman(url: str, cfg: Config) -> list[Article]:
     kandidat: dict[str, tuple[str, datetime | None]] = {}
     for anchor in soup.find_all("a", href=True):
         tautan = urljoin(url, anchor["href"])
-        if urlparse(tautan).netloc != domain or not _ARTIKEL.search(tautan):
+        if urlparse(tautan).netloc != domain or not _adalah_artikel(tautan):
             continue
         judul = _judul_dari(anchor)
         if len(judul) < 20 or tautan in kandidat:
             continue
-        kandidat[tautan] = (judul, _waktu(anchor.get_text(" ", strip=True)))
+        kandidat[tautan] = (
+            judul,
+            _waktu(anchor.get_text(" ", strip=True)) or _waktu_url(tautan),
+        )
 
     log.info("%s: %d kandidat artikel", url, len(kandidat))
     batas = datetime.now(timezone.utc) - timedelta(hours=cfg.lookback_hours)
 
     for tautan, (judul, waktu) in list(kandidat.items())[: cfg.html_max_links]:
+        ringkasan, terbit = _detail(tautan, cfg)
+        waktu = terbit or waktu
         if waktu is not None and waktu.astimezone(timezone.utc) < batas:
             continue
         hasil.append(
             Article(
                 title=judul,
                 link=tautan,
-                summary=_detail(tautan, cfg),
+                summary=ringkasan,
                 source=_sumber(url),
                 published=waktu,
             )
