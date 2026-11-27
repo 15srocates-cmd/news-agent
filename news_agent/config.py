@@ -11,7 +11,6 @@ DEFAULT_FEEDS: tuple[str, ...] = (
     "https://sukabumiku.id/feed/",
     "https://jabar.antaranews.com/rss/terkini.xml",
     "https://www.antaranews.com/rss/terkini.xml",
-    "https://rss.tempo.co/",
 )
 
 DEFAULT_HTML_PAGES: tuple[str, ...] = (
