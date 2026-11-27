@@ -68,7 +68,7 @@ Di repo GitHub: **Settings → Secrets and variables → Actions → New reposit
 
 ### 5. Jadwal otomatis
 
-Workflow sudah dijadwalkan tiap hari pukul **00:00 UTC = 07:00 WIB**. Bisa diubah di `daily-news.yml` bagian `cron`.
+Workflow dijadwalkan tiap hari pukul **23:45 UTC = 06:45 WIB**. Antrean GitHub Actions biasanya menambah ±15–50 menit, sehingga pesan biasanya masuk sekitar **07.00 WIB**. Bisa diubah di `daily-news.yml` bagian `cron`.
 
 > Catatan: GitHub kadang menunda scheduled workflow beberapa menit saat jam sibuk. Ini normal.
 

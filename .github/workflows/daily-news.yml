@@ -2,8 +2,8 @@ name: Daily Indonesian News Digest
 
 on:
   schedule:
-    # 00:00 UTC = 07:00 WIB
-    - cron: "0 0 * * *"
+    # 23:45 UTC = 06:45 WIB; dengan antrean GitHub ~15-50 mnt -> kirim ≈07.00 WIB
+    - cron: "45 23 * * *"
   workflow_dispatch:
 
 permissions:
