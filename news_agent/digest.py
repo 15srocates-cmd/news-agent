@@ -45,8 +45,8 @@ def susun(artikel: list[Article], label: list[Label], cfg: Config) -> list[str]:
     total = sum(len(items) for items in grup.values())
     bagian: list[str] = [
         "📰 <b>Ringkasan Berita Kota Sukabumi</b>\n"
-        f"🗓️ {tanggal} · ⏱️ 07.00 WIB · 📍 fokus Kota Sukabumi\n"
-        f"📥 {total} artikel relevan dari {len(cfg.feeds)} sumber"
+        f"🗓️ {tanggal} · ⏱️ ±07.00 WIB · 📍 fokus Kota Sukabumi\n"
+        f"📥 {total} artikel relevan dari {len(cfg.feeds) + len(cfg.html_pages)} sumber"
     ]
 
     for kategori in cfg.kategori:
